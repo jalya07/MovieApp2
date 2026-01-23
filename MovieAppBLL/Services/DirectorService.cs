@@ -5,12 +5,12 @@ using MovieApp.DAL.Models;
 
 namespace MovieAppBLL.Services
 {
-	public class DirectorService
-        { 
+	public class DirectorService:IDirectorService
+        {
             private readonly MovieAppDbContext movieAppDbContext;
             public DirectorService(MovieAppDbContext movieAppDbContext)
             {
-                movieAppDbContext = movieAppDbContext;
+                this.movieAppDbContext = movieAppDbContext;
             }
             public List<Director> GetAllDirectors() =>
                 movieAppDbContext.Directories.ToList();
@@ -25,18 +25,30 @@ namespace MovieAppBLL.Services
                 if (string.IsNullOrWhiteSpace(value))
                     throw new Exception();
                 return movieAppDbContext.Directories
-                    .Where(d => d.Name.Contains(value, StringComparison.OrdinalIgnoreCase))
+                    .Where(d => d.Name.Contains(value))
                     .ToList();
             }
+            //public async Task<List<Director>> GetAllDirectorBySearchAsync(string value)
+            //{
+            ////if (string.IsNullOrWhiteSpace(value))
+            ////    return await movieAppDbContext.Directories.ToListAsync();
+
+            ////return await movieAppDbContext.Directories
+            ////    .Where(d => d.Name.ToLower().Contains(value.ToLower()))
+            ////    .ToListAsync();
+            
+            // }
             public async Task<List<Director>> GetAllDirectorBySearchAsync(string value)
             {
-                if (string.IsNullOrWhiteSpace(value))
-                    throw new Exception();
-                return await movieAppDbContext.Directories
-                    .Where(d => d.Name.Contains(value, StringComparison.OrdinalIgnoreCase))
-                    .ToListAsync();
+            if (string.IsNullOrWhiteSpace(value))
+                return await movieAppDbContext.Directories.ToListAsync();
+
+            return await movieAppDbContext.Directories
+                .Where(d => d.Name != null &&
+                            EF.Functions.Like(d.Name, $"%{value}%"))
+                .ToListAsync();
             }
-            public void AddDirector(Director director)
+        public void AddDirector(Director director)
             {
                 if (movieAppDbContext.Directories.Any(d=> d.Name.Equals(director.Name, StringComparison.OrdinalIgnoreCase)))
                     throw new Exception();
